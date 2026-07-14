@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from sqlalchemy.orm import Session
+from fastapi.responses import FileResponse
 from datetime import datetime
 
 from database import get_db, engine
@@ -44,7 +45,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"erros_de_validacao": erros}
     )
 
-
+# FRONTEND
+@app.get("/")
+def frontend():
+    return FileResponse("PaginaProduto.html")
 
 # CREATE — Criar novo produto
 @app.post("/produtos/", response_model=ProdutoResposta, dependencies=[Depends(verificar_senha)])
