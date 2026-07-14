@@ -1,0 +1,1038 @@
+<!--
+  Design inspirado em:
+  https://br.pinterest.com/pin/2040762329415235/
+  Referencia visual: dashboard dark mode estilo Salesforce Invoices
+  Adaptado para gerenciamento de produtos — CRUD de produtos (Tarefa 6 - PMD)
+-->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Produtos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0c;
+      --s1:       #111113;
+      --s2:       #181819;
+      --s3:       #1f1f21;
+      --border:   rgba(255,255,255,0.06);
+      --border2:  rgba(255,255,255,0.1);
+      --accent:   #b5f23d;
+      --text:     #ededed;
+      --sub:      #888;
+      --dim:      #555;
+      --danger:   #f87171;
+      --sw:       240px;
+      --swc:      58px;
+      --r:        12px;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sw);
+      min-height: 100vh;
+      background: var(--s1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: width .22s ease;
+      overflow: hidden;
+    }
+    .sidebar.collapsed { width: var(--swc); }
+
+    .sb-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sb-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      overflow: hidden;
+    }
+
+    .sb-logo-mark {
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 6px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .sb-logo-mark svg { width: 14px; height: 14px; }
+
+    .sb-logo-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      letter-spacing: -0.2px;
+      transition: opacity .15s;
+    }
+    .sidebar.collapsed .sb-logo-name { opacity: 0; pointer-events: none; }
+
+    .toggle {
+      width: 26px; height: 26px;
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--sub);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: color .15s, border-color .15s;
+    }
+    .toggle:hover { color: var(--text); border-color: var(--border2); }
+    .toggle svg { width: 10px; height: 10px; }
+
+    .sb-nav {
+      flex: 1;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      overflow: hidden;
+    }
+
+    .sb-section {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 12px 8px 5px;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .sidebar.collapsed .sb-section { opacity: 0; }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--sub);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: background .12s, color .12s;
+      text-decoration: none;
+    }
+    .sb-item:hover { background: var(--s3); color: var(--text); }
+    .sb-item.active { background: rgba(181,242,61,0.1); color: var(--accent); }
+
+    .sb-item-icon {
+      flex-shrink: 0;
+      width: 16px;
+      display: grid;
+      place-items: center;
+    }
+    .sb-item-icon svg { width: 14px; height: 14px; }
+
+    .sb-item-label { transition: opacity .15s; }
+    .sidebar.collapsed .sb-item-label { opacity: 0; }
+
+    .sb-count {
+      margin-left: auto;
+      background: rgba(181,242,61,0.15);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 20px;
+      transition: opacity .15s;
+    }
+    .sidebar.collapsed .sb-count { opacity: 0; }
+
+    .sb-bottom {
+      border-top: 1px solid var(--border);
+      padding: 10px 8px;
+    }
+
+    .sb-user {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .12s;
+      overflow: hidden;
+    }
+    .sb-user:hover { background: var(--s3); }
+
+    .sb-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #b5f23d 0%, #4ade80 100%);
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .sb-user-info { overflow: hidden; transition: opacity .15s; }
+    .sidebar.collapsed .sb-user-info { opacity: 0; }
+
+    .sb-user-name { font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .sb-user-role { font-size: 11px; color: var(--sub); white-space: nowrap; }
+
+    /* ===== MAIN ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--s1);
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 16px;
+      height: 52px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--sub);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .12s, border-color .12s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    .tab-badge {
+      background: var(--accent);
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 20px;
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 30px; height: 30px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--sub);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: color .12s, border-color .12s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border2); }
+    .icon-btn svg { width: 13px; height: 13px; }
+
+    .btn-create {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter .12s;
+    }
+    .btn-create:hover { filter: brightness(1.1); }
+
+    /* CONTENT */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .content::-webkit-scrollbar { width: 3px; }
+    .content::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 3px; }
+
+    /* STATS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 20px;
+      transition: border-color .12s;
+    }
+    .stat:hover { border-color: var(--border2); }
+    .stat.accent-stat { border-color: rgba(181,242,61,0.2); background: rgba(181,242,61,0.04); }
+
+    .stat-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .stat-val {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .accent-stat .stat-val { color: var(--accent); }
+
+    .stat-note {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 5px;
+    }
+
+    /* BODY GRID */
+    .body-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 12px;
+    }
+
+    /* PANEL */
+    .panel {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .panel-sub {
+      font-size: 11px;
+      color: var(--sub);
+    }
+
+    .count-pill {
+      background: rgba(181,242,61,0.1);
+      color: var(--accent);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    /* FORM */
+    .form-body { padding: 16px 18px; }
+
+    .field { margin-bottom: 12px; }
+
+    .field label {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--s3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color .12s;
+    }
+    .field input::placeholder { color: var(--dim); }
+    .field input:focus { border-color: rgba(181,242,61,0.4); }
+    .field input.campo-erro { border-color: rgba(248,113,113,0.5); }
+
+    .err { font-size: 11px; color: var(--danger); margin-top: 3px; display: none; }
+
+    .form-actions {
+      display: flex;
+      gap: 7px;
+      margin-top: 16px;
+    }
+
+    .btn-save {
+      flex: 1;
+      padding: 9px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter .12s;
+    }
+    .btn-save:hover { filter: brightness(1.08); }
+
+    .btn-cancel {
+      padding: 9px 13px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--sub);
+      font-size: 12px;
+      cursor: pointer;
+      transition: color .12s, border-color .12s;
+    }
+    .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+
+    /* LIST */
+    .list-items { overflow-y: auto; flex: 1; }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .1s;
+      gap: 12px;
+    }
+    .list-item:hover { background: rgba(255,255,255,0.02); }
+    .list-item.selected { background: rgba(181,242,61,0.05); border-left: 2px solid var(--accent); }
+    .list-item:last-child { border-bottom: none; }
+
+    .li-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .li-dot.ok  { background: var(--accent); }
+    .li-dot.del { background: var(--danger); }
+
+    .li-info { flex: 1; min-width: 0; }
+    .li-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .li-code { font-size: 11px; color: var(--sub); margin-top: 1px; }
+
+    .li-val {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      flex-shrink: 0;
+    }
+
+    .status-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .tag-ok  { background: rgba(181,242,61,0.1); color: var(--accent); }
+    .tag-del { background: rgba(248,113,113,0.1); color: var(--danger); }
+
+    /* DETALHE */
+    .detail-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--dim);
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .detail-empty-line {
+      width: 40px; height: 2px;
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    .detail-body {
+      padding: 20px 22px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .detail-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .detail-id {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sub);
+      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .detail-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .detail-actions { display: flex; gap: 6px; }
+
+    .dact-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border2);
+      transition: all .12s;
+    }
+    .dact-btn:hover { transform: translateY(-1px); }
+    .dact-edit { background: var(--s3); color: var(--text); }
+    .dact-del  { background: rgba(248,113,113,0.08); color: var(--danger); border-color: rgba(248,113,113,0.2); }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .detail-field {
+      background: var(--s3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .detail-field-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .detail-field-val {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .detail-field-val.big {
+      font-size: 22px;
+      letter-spacing: -0.8px;
+      color: var(--accent);
+    }
+
+    .detail-divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* EMPTY LIST */
+    .list-empty {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 12.5px;
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 22px; right: 22px;
+      background: var(--s2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 11px 18px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+      display: none;
+      z-index: 999;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      animation: toastIn .18s ease;
+    }
+    #toast.ok  { border-color: rgba(181,242,61,0.35); color: var(--accent); }
+    #toast.err { border-color: rgba(248,113,113,0.35); color: var(--danger); }
+
+    @keyframes toastIn {
+      from { transform: translateY(8px) scale(.97); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+  <div class="sb-top">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">
+        <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="#000"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="#000"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="#000"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="#000"/></svg>
+      </div>
+      <span class="sb-logo-name">Produtos</span>
+    </div>
+    <button class="toggle" id="toggle-btn" onclick="toggleSB()">
+      <svg id="toggle-icon" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polyline points="6,2 3,5 6,8"/>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section">Menu</div>
+    <div class="sb-item active">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
+      </span>
+      <span class="sb-item-label">Dashboard</span>
+      <span class="sb-count" id="sb-count">0</span>
+    </div>
+
+    <div class="sb-item" onclick="abrirForm()">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+      </span>
+      <span class="sb-item-label">Novo produto</span>
+    </div>
+
+    <div class="sb-section">Sistema</div>
+
+    <a class="sb-item" href="https://api-crud-produtos.onrender.com/docs" target="_blank">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7h10M8 3l4 4-4 4"/></svg>
+      </span>
+      <span class="sb-item-label">API Docs</span>
+    </a>
+
+    <div class="sb-item">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2"/></svg>
+      </span>
+      <span class="sb-item-label">Configuracoes</span>
+    </div>
+  </nav>
+
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar">JR</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name">Joao Rodrigues</div>
+        <div class="sb-user-role">Desenvolvedor</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tab active">
+      Produtos
+      <span class="tab-badge" id="tab-count">0</span>
+    </div>
+    <div class="tab">Categorias</div>
+    <div class="tab">Relatorios</div>
+    <div class="tab">Configuracoes</div>
+
+    <div class="topbar-right">
+      <button class="icon-btn">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4"/><line x1="9.5" y1="9.5" x2="13" y2="13"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 2a4 4 0 014 4c0 2-1 3-1 4H4s-1-2-1-4a4 4 0 014-4zM5 10h4M7 12v1"/></svg>
+      </button>
+      <button class="btn-create" onclick="abrirForm()">+ Criar produto</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat accent-stat">
+        <div class="stat-label">Total de produtos</div>
+        <div class="stat-val" id="s-total">—</div>
+        <div class="stat-note">na base de dados</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Ativos</div>
+        <div class="stat-val" id="s-ativos">—</div>
+        <div class="stat-note">disponiveis</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Excluidos</div>
+        <div class="stat-val" id="s-excluidos">—</div>
+        <div class="stat-note">marcados como removidos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Status da API</div>
+        <div class="stat-val" id="s-api" style="font-size:14px;padding-top:4px;color:var(--sub)">Verificando</div>
+        <div class="stat-note">onrender.com</div>
+      </div>
+    </div>
+
+    <!-- BODY GRID -->
+    <div class="body-grid">
+
+      <!-- LISTA -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Lista de produtos</div>
+            <div class="panel-sub">Clique para ver detalhes</div>
+          </div>
+          <span class="count-pill" id="list-count">0 itens</span>
+        </div>
+        <div class="list-items" id="list-items">
+          <div class="list-empty">Nenhum produto cadastrado ainda.</div>
+        </div>
+      </div>
+
+      <!-- DETALHE / FORM -->
+      <div class="panel" id="right-panel">
+
+        <!-- Estado vazio -->
+        <div class="detail-empty" id="empty-state">
+          <div class="detail-empty-line"></div>
+          <span>Selecione um produto ou crie um novo</span>
+          <div class="detail-empty-line"></div>
+        </div>
+
+        <!-- Detalhe do produto -->
+        <div class="detail-body" id="detail-view">
+          <div class="detail-header-row">
+            <div>
+              <div class="detail-id" id="d-id">#—</div>
+              <div class="detail-name" id="d-name">—</div>
+            </div>
+            <div class="detail-actions">
+              <button class="dact-btn dact-edit" id="d-edit-btn">Editar</button>
+              <button class="dact-btn dact-del"  id="d-del-btn">Excluir</button>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-field">
+              <div class="detail-field-label">Codigo</div>
+              <div class="detail-field-val" id="d-code">—</div>
+            </div>
+            <div class="detail-field">
+              <div class="detail-field-label">Status</div>
+              <div class="detail-field-val" id="d-status">—</div>
+            </div>
+            <div class="detail-field">
+              <div class="detail-field-label">Valor</div>
+              <div class="detail-field-val big" id="d-val">—</div>
+            </div>
+          </div>
+
+          <div class="detail-divider"></div>
+
+          <div class="detail-field">
+            <div class="detail-field-label">Imagem URL</div>
+            <div class="detail-field-val" id="d-img" style="font-size:12px;color:var(--sub);font-weight:400;word-break:break-all">—</div>
+          </div>
+        </div>
+
+        <!-- Form de criar/editar -->
+        <div class="detail-body" id="form-view">
+          <div class="detail-header-row">
+            <div class="detail-name" id="form-titulo">Novo produto</div>
+          </div>
+
+          <input type="hidden" id="pid"/>
+
+          <div class="field">
+            <label>Nome</label>
+            <input id="nome" type="text" placeholder="Nome do produto"/>
+            <div class="err" id="e-nome">Campo obrigatorio.</div>
+          </div>
+          <div class="field">
+            <label>Codigo</label>
+            <input id="codigo" type="text" placeholder="Ex: PROD-001"/>
+            <div class="err" id="e-codigo">Campo obrigatorio.</div>
+          </div>
+          <div class="field">
+            <label>Valor (R$)</label>
+            <input id="valor" type="number" step="0.01" placeholder="0.00"/>
+            <div class="err" id="e-valor">Valor deve ser maior que zero.</div>
+          </div>
+          <div class="field">
+            <label>Imagem URL <span style="color:var(--dim);font-weight:400">(opcional)</span></label>
+            <input id="imagem" type="text" placeholder="https://..."/>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-save" onclick="salvar()">Salvar</button>
+            <button class="btn-cancel" onclick="fecharForm()">Cancelar</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = "https://api-crud-produtos.onrender.com"
+  const H   = { "Content-Type": "application/json", "Token-Acesso": "teste123" }
+  let collapsed = false
+  let selectedId = null
+  let produtos = []
+
+  function toggleSB() {
+    collapsed = !collapsed
+    document.getElementById("sb").classList.toggle("collapsed", collapsed)
+    const icon = document.getElementById("toggle-icon")
+    icon.innerHTML = collapsed
+      ? '<polyline points="4,2 7,5 4,8"/>'
+      : '<polyline points="6,2 3,5 6,8"/>'
+  }
+
+  async function carregar() {
+    try {
+      const r = await fetch(`${API}/produtos/`, { headers: H })
+      produtos = await r.json()
+
+      const total = produtos.length
+      const ativos = produtos.filter(p=>!p.excluido).length
+      const excl   = produtos.filter(p=> p.excluido).length
+
+      document.getElementById("s-total").textContent    = total
+      document.getElementById("s-ativos").textContent   = ativos
+      document.getElementById("s-excluidos").textContent= excl
+      document.getElementById("sb-count").textContent   = total
+      document.getElementById("tab-count").textContent  = total
+      document.getElementById("list-count").textContent = `${total} iten${total!==1?"s":""}`
+
+      const api = document.getElementById("s-api")
+      api.textContent = "Online"
+      api.style.color = "var(--accent)"
+
+      renderLista()
+    } catch {
+      document.getElementById("s-api").textContent = "Offline"
+      document.getElementById("s-api").style.color = "var(--danger)"
+      toast("Erro ao conectar com a API", "err")
+    }
+  }
+
+  function renderLista() {
+    const el = document.getElementById("list-items")
+    if (!produtos.length) {
+      el.innerHTML = `<div class="list-empty">Nenhum produto cadastrado ainda.</div>`
+      return
+    }
+    el.innerHTML = produtos.map(p => `
+      <div class="list-item ${selectedId===p.id?"selected":""}" onclick="selecionarProduto(${p.id})">
+        <div class="li-dot ${p.excluido?"del":"ok"}"></div>
+        <div class="li-info">
+          <div class="li-name">${p.nome}</div>
+          <div class="li-code">${p.codigo}</div>
+        </div>
+        <div class="li-val">R$ ${p.valor.toFixed(2)}</div>
+        <span class="status-tag ${p.excluido?"tag-del":"tag-ok"}">${p.excluido?"Excluido":"Ativo"}</span>
+      </div>
+    `).join("")
+  }
+
+  function selecionarProduto(id) {
+    selectedId = id
+    const p = produtos.find(x=>x.id===id)
+    if (!p) return
+
+    fecharEstados()
+    renderLista()
+
+    document.getElementById("d-id").textContent     = `# ${p.id}`
+    document.getElementById("d-name").textContent   = p.nome
+    document.getElementById("d-code").textContent   = p.codigo
+    document.getElementById("d-status").textContent = p.excluido ? "Excluido" : "Ativo"
+    document.getElementById("d-status").style.color = p.excluido ? "var(--danger)" : "var(--accent)"
+    document.getElementById("d-val").textContent    = `R$ ${p.valor.toFixed(2)}`
+    document.getElementById("d-img").textContent    = p.imagem || "Nenhuma imagem"
+
+    document.getElementById("d-edit-btn").onclick = () => abrirFormEdicao(p)
+    document.getElementById("d-del-btn").onclick  = () => excluir(p.id)
+
+    document.getElementById("empty-state").style.display = "none"
+    document.getElementById("detail-view").style.display = "flex"
+    document.getElementById("form-view").style.display   = "none"
+  }
+
+  function abrirForm() {
+    selectedId = null
+    renderLista()
+    fecharEstados()
+    document.getElementById("form-titulo").textContent = "Novo produto"
+    document.getElementById("pid").value = ""
+    limparCampos()
+    document.getElementById("empty-state").style.display = "none"
+    document.getElementById("detail-view").style.display = "none"
+    document.getElementById("form-view").style.display   = "flex"
+    document.getElementById("nome").focus()
+  }
+
+  function abrirFormEdicao(p) {
+    document.getElementById("form-titulo").textContent = `Editando produto #${p.id}`
+    document.getElementById("pid").value    = p.id
+    document.getElementById("nome").value   = p.nome
+    document.getElementById("codigo").value = p.codigo
+    document.getElementById("valor").value  = p.valor
+    document.getElementById("imagem").value = p.imagem || ""
+    document.getElementById("empty-state").style.display = "none"
+    document.getElementById("detail-view").style.display = "none"
+    document.getElementById("form-view").style.display   = "flex"
+  }
+
+  function fecharForm() {
+    if (selectedId) { selecionarProduto(selectedId) }
+    else {
+      document.getElementById("empty-state").style.display = "flex"
+      document.getElementById("detail-view").style.display = "none"
+      document.getElementById("form-view").style.display   = "none"
+    }
+  }
+
+  function fecharEstados() {
+    document.getElementById("empty-state").style.display = "none"
+    document.getElementById("detail-view").style.display = "none"
+    document.getElementById("form-view").style.display   = "none"
+  }
+
+  async function salvar() {
+    const id=document.getElementById("pid").value
+    const nome=document.getElementById("nome").value.trim()
+    const codigo=document.getElementById("codigo").value.trim()
+    const valor=document.getElementById("valor").value
+    const imagem=document.getElementById("imagem").value.trim()
+
+    let err=false
+    const v=(c,e,cond)=>{
+      document.getElementById(c).classList.toggle("campo-erro",cond)
+      document.getElementById(e).style.display=cond?"block":"none"
+      if(cond) err=true
+    }
+    v("nome","e-nome",!nome)
+    v("codigo","e-codigo",!codigo)
+    v("valor","e-valor",!valor||parseFloat(valor)<=0)
+    if(err) return
+
+    const body=JSON.stringify({nome,codigo,valor:parseFloat(valor),imagem:imagem||"",excluido:false})
+    try {
+      let novoId = id
+      if(id) {
+        await fetch(`${API}/produtos/${id}`,{method:"PUT",headers:H,body})
+        toast("Produto atualizado","ok")
+      } else {
+        const r = await fetch(`${API}/produtos/`,{method:"POST",headers:H,body})
+        const d = await r.json()
+        novoId = d.id
+        toast("Produto criado","ok")
+      }
+      await carregar()
+      selecionarProduto(parseInt(novoId))
+    } catch { toast("Erro ao salvar","err") }
+  }
+
+  async function excluir(id) {
+    if(!confirm("Excluir este produto?")) return
+    try {
+      await fetch(`${API}/produtos/${id}`,{method:"DELETE",headers:H})
+      selectedId = null
+      toast("Produto excluido","ok")
+      await carregar()
+      document.getElementById("empty-state").style.display = "flex"
+      document.getElementById("detail-view").style.display = "none"
+      document.getElementById("form-view").style.display   = "none"
+    } catch { toast("Erro ao excluir","err") }
+  }
+
+  function limparCampos() {
+    ["nome","codigo","valor","imagem"].forEach(id=>document.getElementById(id).value="")
+    document.querySelectorAll(".campo-erro").forEach(el=>el.classList.remove("campo-erro"))
+    document.querySelectorAll(".err").forEach(el=>el.style.display="none")
+  }
+
+  function toast(msg,tipo="ok") {
+    const el=document.getElementById("toast")
+    el.textContent=msg; el.className=tipo; el.style.display="block"
+    setTimeout(()=>el.style.display="none",3000)
+  }
+
+  carregar()
+</script>
+</body>
+</html>
