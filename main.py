@@ -48,7 +48,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # FRONTEND
 @app.get("/")
 def frontend():
-    return FileResponse("PaginaProduto.html")
+    return FileResponse("PaginaProduto (13).html")
 
 # CREATE — Criar novo produto
 @app.post("/produtos/", response_model=ProdutoResposta, dependencies=[Depends(verificar_senha)])
